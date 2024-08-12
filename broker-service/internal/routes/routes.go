@@ -1,6 +1,7 @@
-package main
+package routes
 
 import (
+	"broker/internal/handlers"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -8,7 +9,7 @@ import (
 	"github.com/go-chi/cors"
 )
 
-func (app *Config) routes() http.Handler {
+func GetMux() http.Handler {
 	mux := chi.NewRouter()
 
 	// define the specifications about the server
@@ -37,6 +38,6 @@ func (app *Config) routes() http.Handler {
 	// create a route to check the health of server
 	mux.Use(middleware.Heartbeat("/ping"))
 
-	mux.Post("/", app.Broker)
+	mux.Post("/", handlers.Broker)
 	return mux
 }

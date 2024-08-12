@@ -1,23 +1,22 @@
 package main
 
 import (
+	"broker/config"
+	"broker/internal/routes"
 	"fmt"
 	"log"
 	"net/http"
 )
 
-type Config struct{}
-
-var webPort = "3000"
-
 func main() {
-	app := Config{}
 
-	log.Printf("server on %s 🔥\n", webPort)
+	cnfg := config.NewConfig("3000")
+
+	log.Printf("server on %s 🔥\n", cnfg.WebPort)
 
 	server := http.Server{
-		Addr:    fmt.Sprintf(":%s", webPort),
-		Handler: app.routes(),
+		Addr:    fmt.Sprintf(":%s", cnfg.WebPort),
+		Handler: routes.GetMux(),
 	}
 
 	if err := server.ListenAndServe(); err != nil {

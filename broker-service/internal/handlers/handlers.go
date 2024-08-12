@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
@@ -11,7 +11,7 @@ type jsonResponse struct {
 	Data    any    `json:"data,omitempty"`
 }
 
-func (app *Config) Broker(w http.ResponseWriter, r *http.Request) {
+func Broker(w http.ResponseWriter, r *http.Request) {
 	payload := jsonResponse{
 		Error:   false,
 		Message: "entrou no broker",
