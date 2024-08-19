@@ -10,7 +10,7 @@ import (
 
 func main() {
 
-	cnfg := config.NewConfig("3000")
+	cnfg := config.NewConfig("80")
 
 	log.Printf("server on %s 🔥\n", cnfg.WebPort)
 
