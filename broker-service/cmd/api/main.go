@@ -2,7 +2,7 @@ package main
 
 import (
 	"broker/config"
-	"broker/internal/routes"
+	"broker/routes"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,7 +12,7 @@ func main() {
 
 	cnfg := config.NewConfig("80")
 
-	log.Printf("server on %s 🔥\n", cnfg.WebPort)
+	log.Println("Broker service is on")
 
 	server := http.Server{
 		Addr:    fmt.Sprintf(":%s", cnfg.WebPort),
