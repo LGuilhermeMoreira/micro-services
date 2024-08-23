@@ -2,7 +2,7 @@ package main
 
 import (
 	"authentication/config"
-	"authentication/data"
+	"authentication/database"
 	"authentication/routes"
 	"fmt"
 	"log"
@@ -11,8 +11,11 @@ import (
 
 func main() {
 	log.Println("Auth service is on")
-	//todo connect with database
-	app := config.NewConfig(nil, "3000", data.Models{})
+	conn := database.ConnectToDB()
+	if conn == nil {
+		log.Fatal("Could not connect to database")
+	}
+	app := config.NewConfig(conn, "3000")
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%v", app.Webport),
 		Handler: routes.GetMux(),

@@ -11,10 +11,10 @@ type Config struct {
 	Models  data.Models
 }
 
-func NewConfig(db *sql.DB, webport string, models data.Models) *Config {
+func NewConfig(db *sql.DB, webport string) *Config {
 	return &Config{
 		DB:      db,
 		Webport: webport,
-		Models:  models,
+		Models:  data.New(db),
 	}
 }
