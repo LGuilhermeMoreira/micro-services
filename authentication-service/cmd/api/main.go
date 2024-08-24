@@ -2,7 +2,7 @@ package main
 
 import (
 	"authentication/config"
-	"authentication/database"
+	database "authentication/connection"
 	"authentication/routes"
 	"fmt"
 	"log"

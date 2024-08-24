@@ -1,14 +1,15 @@
-package database
+package connection
 
 import (
 	"database/sql"
 	"fmt"
-	_ "github.com/jackc/pgconn"
-	_ "github.com/jackc/pgx/v4"
-	_ "github.com/jackc/pgx/v4/stdlib"
 	"log"
 	"os"
 	"time"
+
+	_ "github.com/jackc/pgconn"
+	_ "github.com/jackc/pgx/v4"
+	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
 func openDB(dns string) (*sql.DB, error) {

@@ -10,10 +10,12 @@ services:
       replicas: 1
       mode: replicated
     container_name: broker-service
+
   postgres:
     image: 'postgres:14.2'
     ports:
       - "5432:5432"
+    restart: always
     deploy:
       mode: replicated
       replicas: 1
@@ -21,6 +23,19 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: user
-    volumes_from:
+    volumes:
       - ./db-data/postgres/:/var/lib/postgresql/data/
 
+  authentition-service:
+    build: 
+      context: ./../authentication-service
+      dockerfile: ./../authentication-service/authentication-service.dockerfile
+    restart: always
+    ports:
+      - "8081:80"
+    deploy:
+      replicas: 1
+      mode: replicated
+    container_name: authentication-service
+    environment:
+      DNS: "host=postgres port=5432 dbname=user user=postgres password=password sslmode=disable timezone=UTC connect_timeout=5"
