@@ -18,7 +18,7 @@ func main() {
 	app := config.NewConfig(conn, "3000")
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%v", app.Webport),
-		Handler: routes.GetMux(),
+		Handler: routes.GetMux(app.DB),
 	}
 	err := srv.ListenAndServe()
 	if err != nil {

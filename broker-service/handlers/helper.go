@@ -6,6 +6,16 @@ import (
 	"net/http"
 )
 
+type RequestPayload struct {
+	Action string      `json:"action"`
+	Auth   AuthPayload `json:"auth,omitempty"`
+}
+
+type AuthPayload struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 type jsonResponse struct {
 	Error   bool   `json:"error"`
 	Message string `json:"message"`

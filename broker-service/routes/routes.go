@@ -39,5 +39,7 @@ func GetMux() http.Handler {
 	mux.Use(middleware.Heartbeat("/ping"))
 
 	mux.Post("/", handlers.Broker)
+
+	mux.Post("/handle", handlers.HandleSubmission)
 	return mux
 }
