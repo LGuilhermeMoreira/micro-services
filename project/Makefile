@@ -57,6 +57,13 @@ FRONT_END_BINARY=frontApp
 BROKER_BINARY=brokerApp
 AUTH_BINARY=authApp
 
+## reload: stops docker compose (if running), builds all projects and starts docker compose
+reload:
+	@echo "Reloading Docker images..."
+	docker compose down
+	docker compose up --build -d
+	@echo "Docker images reloaded!"
+
 ## up: starts all containers in the background without forcing build
 up:
 	@echo "Starting Docker images..."

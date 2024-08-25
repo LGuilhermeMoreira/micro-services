@@ -24,7 +24,7 @@ func (h handlerConfig) Authenticate(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 	}
 
-	err := readJSON(w, r, requestPayload)
+	err := readJSON(w, r, &requestPayload)
 
 	if err != nil {
 		errorJSON(w, err, http.StatusBadRequest)
@@ -35,13 +35,13 @@ func (h handlerConfig) Authenticate(w http.ResponseWriter, r *http.Request) {
 
 	user, err := model.User.GetByEmail(requestPayload.Email)
 	if err != nil {
-		errorJSON(w, errors.New("invalid credentials"), http.StatusBadRequest)
+		errorJSON(w, errors.New("invalid credentials"), http.StatusNotFound)
 		return
 	}
 
 	valid, err := user.PasswordMatches(requestPayload.Password)
 	if err != nil || !valid {
-		errorJSON(w, errors.New("invalid credentials"), http.StatusBadRequest)
+		errorJSON(w, errors.New("invalid credentials"), http.StatusUnauthorized)
 		return
 	}
 

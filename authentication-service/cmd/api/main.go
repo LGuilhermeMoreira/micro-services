@@ -15,7 +15,7 @@ func main() {
 	if conn == nil {
 		log.Fatal("Could not connect to database")
 	}
-	app := config.NewConfig(conn, "3000")
+	app := config.NewConfig(conn, "80")
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%v", app.Webport),
 		Handler: routes.GetMux(app.DB),

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 )
 
@@ -18,11 +19,12 @@ func Broker(w http.ResponseWriter, r *http.Request) {
 
 func HandleSubmission(w http.ResponseWriter, r *http.Request) {
 	var requestPayload RequestPayload
-	err := readJSON(w, r, requestPayload)
+	err := readJSON(w, r, &requestPayload)
 	if err != nil {
 		errorJSON(w, err)
 		return
 	}
+
 	switch requestPayload.Action {
 	case "auth":
 		authenticate(w, requestPayload.Auth)
@@ -53,11 +55,11 @@ func authenticate(w http.ResponseWriter, a AuthPayload) {
 	defer response.Body.Close()
 
 	// make sure we get back the correct status code
-
 	if response.StatusCode == http.StatusUnauthorized {
 		errorJSON(w, errors.New("invalid credentials"))
 		return
 	} else if response.StatusCode != http.StatusAccepted {
+		log.Println("wrong status of", response.StatusCode)
 		errorJSON(w, errors.New("error calling auth service"))
 		return
 	}
