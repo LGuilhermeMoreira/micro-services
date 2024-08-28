@@ -53,3 +53,7 @@ func (h handlerConfig) Authenticate(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusAccepted, payload)
 }
+
+func (h handlerConfig) Create(w http.ResponseWriter, r *http.Request) {
+
+}

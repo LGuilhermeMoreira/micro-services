@@ -1,14 +1,9 @@
 package handlers
 
 import (
-	"authentication/config"
 	"encoding/json"
 	"net/http"
 )
-
-type Helper struct {
-	cnfg config.Config
-}
 
 type jsonResponse struct {
 	Error   bool   `json:"error"`
