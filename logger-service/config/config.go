@@ -2,6 +2,7 @@ package config
 
 import (
 	"logger/connection"
+	"logger/data"
 
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -11,6 +12,7 @@ type Config struct {
 	RpcPort     string
 	MongoClient *mongo.Client
 	GrpcPort    string
+	Models      data.Model
 }
 
 func NewConfig(webport, rpcport, grpcport, mongourl string) (*Config, error) {
@@ -23,5 +25,6 @@ func NewConfig(webport, rpcport, grpcport, mongourl string) (*Config, error) {
 		RpcPort:     rpcport,
 		GrpcPort:    grpcport,
 		MongoClient: client,
+		Models:      data.New(client),
 	}, nil
 }
