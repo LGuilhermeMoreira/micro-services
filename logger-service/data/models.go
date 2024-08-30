@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"log"
 	"time"
 
@@ -47,16 +48,16 @@ func (l *LogEntry) GetAll() ([]LogEntry, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	defer cancel()
 	collection := mongoClient.Database("logs").Collection("logs")
-	options := options.Find()
-	options.SetSort(bson.D{{"create_at", -1}})
-	response, err := collection.Find(context.TODO(), bson.D{}, options)
+	opt := options.Find()
+	opt.SetSort(bson.D{{"create_at", -1}})
+	response, err := collection.Find(context.TODO(), bson.D{}, opt)
 	if err != nil {
 		log.Println("Error finding all logs", err)
 		return nil, err
 	}
 	defer response.Close(ctx)
 
-	var itens []LogEntry
+	var logs []LogEntry
 	for response.Next(ctx) {
 		var item LogEntry
 
@@ -67,8 +68,71 @@ func (l *LogEntry) GetAll() ([]LogEntry, error) {
 			return nil, err
 		}
 
-		itens = append(itens, item)
+		logs = append(logs, item)
 	}
 
-	return itens, nil
+	return logs, nil
+}
+
+func (l *LogEntry) GetOne(id string) (*LogEntry, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+	defer cancel()
+
+	collection := mongoClient.Database("logs").Collection("logs")
+
+	docId, err := primitive.ObjectIDFromHex(id)
+
+	if err != nil {
+		log.Println("Error finding log", err)
+		return nil, err
+	}
+
+	var entry LogEntry
+	err = collection.FindOne(ctx, bson.D{{"_id", docId}}).Decode(&entry)
+
+	if err != nil {
+		log.Println("Error decoding entry", err)
+		return nil, err
+	}
+
+	return &entry, nil
+}
+
+func (l *LogEntry) DropCollection(name string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+	defer cancel()
+	collection := mongoClient.Database("logs").Collection(name)
+	err := collection.Drop(ctx)
+	if err != nil {
+		log.Println("Error dropping log", err)
+	}
+	return err
+}
+
+func (l *LogEntry) Update() (*mongo.UpdateResult, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+	defer cancel()
+
+	collection := mongoClient.Database("logs").Collection("logs")
+
+	docId, err := primitive.ObjectIDFromHex(l.ID)
+
+	if err != nil {
+		log.Println("Error finding log", err)
+		return nil, err
+	}
+
+	result, err := collection.UpdateOne(ctx, bson.M{"_id": docId}, bson.D{{"$set", bson.D{
+		{"name", l.Name},
+		{"data", l.Data},
+		{"created_at", l.CreatedAt},
+		{"updated_at", time.Now()},
+	}}})
+
+	if err != nil {
+		log.Println("Error updating log", err)
+		return nil, err
+	}
+
+	return result, nil
 }

@@ -2,7 +2,11 @@ package main
 
 import (
 	"context"
-	"logger/cmd/config"
+	"fmt"
+	"log"
+	"logger/config"
+	"logger/routes"
+	"net/http"
 	"time"
 )
 
@@ -17,10 +21,19 @@ func main() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*150)
 	defer cancel()
-
 	defer func() {
-		if cnfg.MongoClient.Disconnect(ctx); err != nil {
+		if err = cnfg.MongoClient.Disconnect(ctx); err != nil {
 			panic(err)
 		}
 	}()
+
+	srv := &http.Server{
+		Addr:    fmt.Sprintf(":%v", cnfg.WebPort),
+		Handler: routes.GetMux(*cnfg),
+	}
+
+	err = srv.ListenAndServe()
+	if err != nil {
+		log.Println(err)
+	}
 }

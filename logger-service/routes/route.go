@@ -20,9 +20,11 @@ func GetMux(cnfg config.Config) *chi.Mux {
 		MaxAge:           300,
 	}))
 
+	log := handlers.NewLogger(cnfg.Models)
+
 	mux.Use(middleware.Logger)
 	mux.Use(middleware.Heartbeat("/ping"))
-	mux.Post("/log", handlers.WriteLog)
+	mux.Post("/log", log.WriteLog)
 
 	return mux
 }
