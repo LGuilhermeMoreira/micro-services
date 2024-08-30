@@ -31,7 +31,7 @@ func main() {
 		Addr:    fmt.Sprintf(":%v", cnfg.WebPort),
 		Handler: routes.GetMux(*cnfg),
 	}
-
+	log.Println("logger service started")
 	err = srv.ListenAndServe()
 	if err != nil {
 		log.Println(err)

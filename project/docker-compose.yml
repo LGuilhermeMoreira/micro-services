@@ -1,4 +1,5 @@
 services:
+
   broker-service:
     build: 
       context: ./../broker-service
@@ -10,6 +11,32 @@ services:
       replicas: 1
       mode: replicated
     container_name: broker-service
+
+  authentition-service:
+    build: 
+      context: ./../authentication-service
+      dockerfile: ./../authentication-service/authentication-service.dockerfile
+    restart: always
+    ports:
+      - "8081:80"
+    deploy:
+      replicas: 1
+      mode: replicated
+    container_name: authentication-service
+    environment:
+      DNS: "host=postgres port=5432 dbname=user user=postgres password=password sslmode=disable timezone=UTC connect_timeout=5"
+
+  logger-service:
+    build: 
+      context: ./../logger-service
+      dockerfile: ./../logger-service/logger-service.dockerfile
+    restart: always
+    ports:
+      - "8082:80"
+    deploy:
+      replicas: 1
+      mode: replicated
+    container_name: logger-service
 
   postgres:
     image: 'postgres:14.2'
@@ -26,16 +53,18 @@ services:
     volumes:
       - ./db-data/postgres/:/var/lib/postgresql/data/
 
-  authentition-service:
-    build: 
-      context: ./../authentication-service
-      dockerfile: ./../authentication-service/authentication-service.dockerfile
-    restart: always
+  mongodb:
+    image: 'mongo:4.2.16-bionic'
     ports:
-      - "8081:80"
+      - "27017:27017"
+    restart: always
     deploy:
-      replicas: 1
       mode: replicated
-    container_name: authentication-service
+      replicas: 1
     environment:
-      DNS: "host=postgres port=5432 dbname=user user=postgres password=password sslmode=disable timezone=UTC connect_timeout=5"
+      MONGO_INITDB_DATABASE: logs
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - ./db-data/mongo/:/data/db/
+
