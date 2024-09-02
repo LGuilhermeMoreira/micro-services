@@ -11,6 +11,8 @@ services:
       replicas: 1
       mode: replicated
     container_name: broker-service
+    networks:
+      - app-network
 
   authentition-service:
     build: 
@@ -25,6 +27,8 @@ services:
     container_name: authentication-service
     environment:
       DNS: "host=postgres port=5432 dbname=user user=postgres password=password sslmode=disable timezone=UTC connect_timeout=5"
+    networks:
+      - app-network
 
   logger-service:
     build: 
@@ -37,6 +41,8 @@ services:
       replicas: 1
       mode: replicated
     container_name: logger-service
+    networks:
+      - app-network
 
   postgres:
     image: 'postgres:14.2'
@@ -52,6 +58,8 @@ services:
       POSTGRES_DB: user
     volumes:
       - ./db-data/postgres/:/var/lib/postgresql/data/
+    networks:
+      - app-network
 
   mongodb:
     image: 'mongo:4.2.16-bionic'
@@ -67,4 +75,9 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: password
     volumes:
       - ./db-data/mongo/:/data/db/
+    networks:
+      - app-network
 
+networks:
+  app-network:
+    driver: bridge

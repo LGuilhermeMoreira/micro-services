@@ -64,3 +64,12 @@ stop:
 	@echo "Stopping front end..."
 	@-pkill -SIGTERM -f "./${FRONT_END_BINARY}"
 	@echo "Stopped front end!"
+
+## stop front ent and stop docker
+end:
+	@echo "Stopping front end..."
+	@-pkill -SIGTERM -f "./${FRONT_END_BINARY}"
+	@echo "Stopped front end!"
+	@echo "Stopping docker compose..."
+	docker compose down
+	@echo "Done!"

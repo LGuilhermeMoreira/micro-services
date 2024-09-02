@@ -14,7 +14,7 @@ func main() {
 	cnfg, err := config.NewConfig("80",
 		"5001",
 		"50001",
-		"mongodb://mongo:27017")
+		"mongodb://mongodb:27017")
 	if err != nil {
 		panic(err)
 	}

@@ -28,6 +28,8 @@ func HandleSubmission(w http.ResponseWriter, r *http.Request) {
 	switch requestPayload.Action {
 	case "auth":
 		authenticate(w, requestPayload.Auth)
+	case "log":
+		logger(w, requestPayload.Log)
 	default:
 		errorJSON(w, errors.New("unknown action"))
 	}
@@ -83,4 +85,50 @@ func authenticate(w http.ResponseWriter, a AuthPayload) {
 
 	writeJSON(w, http.StatusAccepted, payload)
 
+}
+
+func logger(w http.ResponseWriter, entry LogPayload) {
+	jsonData, err := json.MarshalIndent(entry, "", "\t")
+	if err != nil {
+		errorJSON(w, err, http.StatusBadRequest)
+		return
+	}
+
+	loggerServiceUrl := "http://logger-service/log"
+
+	request, err := http.NewRequest("POST", loggerServiceUrl, bytes.NewBuffer(jsonData))
+
+	if err != nil {
+		errorJSON(w, err, http.StatusBadGateway)
+		return
+	}
+
+	response, err := http.DefaultClient.Do(request)
+	if err != nil {
+		errorJSON(w, err, http.StatusBadGateway)
+		return
+	}
+
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusAccepted {
+		errorJSON(w, errors.New("status not accepted"), http.StatusNotAcceptable)
+		return
+	}
+
+	var respData map[string]any
+
+	if err = json.NewDecoder(response.Body).Decode(&respData); err != nil {
+		errorJSON(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	msg, _ := respData["message"].(string)
+
+	var resp jsonResponse
+	resp.Error = false
+	resp.Message = msg
+	resp.Data = respData["data"]
+
+	writeJSON(w, http.StatusAccepted, resp)
 }

@@ -36,5 +36,5 @@ func (l *Logger) WriteLog(w http.ResponseWriter, r *http.Request) {
 		Data:    event,
 	}
 
-	writeJSON(w, http.StatusCreated, response)
+	writeJSON(w, http.StatusAccepted, response)
 }

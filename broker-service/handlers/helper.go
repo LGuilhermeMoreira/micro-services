@@ -2,17 +2,24 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 )
 
 type RequestPayload struct {
 	Action string      `json:"action"`
 	Auth   AuthPayload `json:"auth,omitempty"`
+	Log    LogPayload  `json:"log,omitempty"`
 }
 
 type AuthPayload struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+type LogPayload struct {
+	Name string `json:"name"`
+	Data string `json:"data"`
 }
 
 type jsonResponse struct {
@@ -34,21 +41,23 @@ func readJSON(w http.ResponseWriter, r *http.Request, data any) error {
 	}
 	return nil
 }
-
 func writeJSON(w http.ResponseWriter, status int, data any, headers ...http.Header) error {
-	out, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
 	if len(headers) > 0 {
 		for key, value := range headers[0] {
 			w.Header()[key] = value
 		}
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	_, err = w.Write(out)
-	return err
+
+	err := json.NewEncoder(w).Encode(data)
+	if err != nil {
+		log.Println("Error sending response", err)
+		return err
+	}
+
+	return nil
 }
 
 func errorJSON(w http.ResponseWriter, err error, status ...int) error {
@@ -61,5 +70,6 @@ func errorJSON(w http.ResponseWriter, err error, status ...int) error {
 	var payload jsonResponse
 	payload.Error = true
 	payload.Message = err.Error()
+
 	return writeJSON(w, statusCode, payload)
 }
