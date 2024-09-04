@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"authentication/data"
+	"bytes"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -45,6 +47,12 @@ func (h handlerConfig) Authenticate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = logRegister("auth", fmt.Sprintf("%v is logged", user.Email))
+
+	if err != nil {
+		errorJSON(w, err)
+	}
+
 	payload := jsonResponse{
 		Error:   false,
 		Message: fmt.Sprintf("Logged in user %s", user.Email),
@@ -54,6 +62,37 @@ func (h handlerConfig) Authenticate(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusAccepted, payload)
 }
 
-func (h handlerConfig) Create(w http.ResponseWriter, r *http.Request) {
+func logRegister(name, data string) error {
+	var entry struct {
+		Name string `json:"name"`
+		Data string `json:"data"`
+	}
 
+	entry.Name = name
+	entry.Data = data
+
+	jsonData, err := json.MarshalIndent(entry, "", "\t")
+
+	if err != nil {
+		return err
+	}
+
+	url := "http://logger-service/log"
+
+	request, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return err
+	}
+
+	response, err := http.DefaultClient.Do(request)
+
+	if err != nil {
+		return err
+	}
+
+	if response.StatusCode != http.StatusAccepted {
+		return errors.New("request not accepted")
+	}
+
+	return nil
 }
