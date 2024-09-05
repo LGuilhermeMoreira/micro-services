@@ -10,17 +10,13 @@ import (
 	"net/http"
 )
 
-type handlerConfig struct {
-	DB *sql.DB
+var DB *sql.DB
+
+func New(db *sql.DB) {
+	DB = db
 }
 
-func NewhandlerConfig(db *sql.DB) *handlerConfig {
-	return &handlerConfig{
-		DB: db,
-	}
-}
-
-func (h handlerConfig) Authenticate(w http.ResponseWriter, r *http.Request) {
+func Authenticate(w http.ResponseWriter, r *http.Request) {
 	var requestPayload struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -33,7 +29,7 @@ func (h handlerConfig) Authenticate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	model := data.New(h.DB)
+	model := data.New(DB)
 
 	user, err := model.User.GetByEmail(requestPayload.Email)
 	if err != nil {

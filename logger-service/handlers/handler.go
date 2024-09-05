@@ -5,17 +5,13 @@ import (
 	"net/http"
 )
 
-type Logger struct {
-	Model data.Model
+var Model data.Model
+
+func New(m data.Model) {
+	Model = m
 }
 
-func NewLogger(m data.Model) *Logger {
-	return &Logger{
-		Model: m,
-	}
-}
-
-func (l *Logger) WriteLog(w http.ResponseWriter, r *http.Request) {
+func WriteLog(w http.ResponseWriter, r *http.Request) {
 	var requestPayload jsonPayload
 	_ = readJSON(w, r, &requestPayload)
 
@@ -24,7 +20,7 @@ func (l *Logger) WriteLog(w http.ResponseWriter, r *http.Request) {
 		Data: requestPayload.Data,
 	}
 
-	err := l.Model.LogEntry.Insert(event)
+	err := Model.LogEntry.Insert(event)
 
 	if err != nil {
 		errorJSON(w, err)

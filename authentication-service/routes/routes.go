@@ -35,9 +35,7 @@ func GetMux(db *sql.DB) http.Handler {
 	}))
 
 	mux.Use(middleware.Heartbeat("/ping"))
-
-	hand := handlers.NewhandlerConfig(db)
-
-	mux.Post("/authenticate", hand.Authenticate)
+	handlers.New(db)
+	mux.Post("/authenticate", handlers.Authenticate)
 	return mux
 }
