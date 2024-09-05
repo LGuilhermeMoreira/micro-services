@@ -1,11 +1,12 @@
 package routes
 
 import (
+	"logger/config"
+	"logger/handlers"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"logger/config"
-	"logger/handlers"
 )
 
 func GetMux(cnfg config.Config) *chi.Mux {
@@ -20,11 +21,11 @@ func GetMux(cnfg config.Config) *chi.Mux {
 		MaxAge:           300,
 	}))
 
-	log := handlers.NewLogger(cnfg.Models)
+	handlers.New(cnfg.Models)
 
 	mux.Use(middleware.Logger)
 	mux.Use(middleware.Heartbeat("/ping"))
-	mux.Post("/log", log.WriteLog)
+	mux.Post("/log", handlers.WriteLog)
 
 	return mux
 }
