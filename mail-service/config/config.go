@@ -4,8 +4,8 @@ type Config struct {
 	WebPort string
 }
 
-func NewConfig(webport string) *Config {
+func NewConfig(webPort string) *Config {
 	return &Config{
-		WebPort: webport,
+		WebPort: webPort,
 	}
 }
