@@ -15,7 +15,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%v", cnfg.WebPort),
-		Handler: routes.GetMux(),
+		Handler: routes.GetMux(cnfg.Mailer),
 	}
 
 	err := srv.ListenAndServe()

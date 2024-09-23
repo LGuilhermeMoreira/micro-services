@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"mailer-service/email"
+	"mailer-service/handlers"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -8,7 +10,7 @@ import (
 	"github.com/go-chi/cors"
 )
 
-func GetMux() http.Handler {
+func GetMux(m email.Mail) http.Handler {
 	mux := chi.NewRouter()
 
 	// define the specifications about the server
@@ -36,5 +38,8 @@ func GetMux() http.Handler {
 
 	// create a route to check the health of server
 	mux.Use(middleware.Heartbeat("/ping"))
+	// init mail variable in package handlers
+	handlers.New(m)
+	mux.Post("/send", handlers.SendMail)
 	return mux
 }

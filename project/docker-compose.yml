@@ -44,6 +44,29 @@ services:
     networks:
       - app-network
 
+  mailer-service:
+    build: 
+      context: ./../mailer-service
+      dockerfile: ./../mailer-service/mailer-service.dockerfile
+    restart: always
+    ports:
+      - "8083:80"
+    deploy:
+      replicas: 1
+      mode: replicated
+    container_name: mailer-service
+    networks:
+      - app-network
+    environment:
+      MAIL_PORT: 1025
+      MAIL_DOMAIN:
+      MAIL_HOST: mailhog
+      MAIL_USERNAMW:
+      MAIL_PASSWORD:
+      MAIL_ENCRYPTION:
+      MAIL_NAME:
+      MAIL_ADDRESS:
+
   postgres:
     image: 'postgres:14.2'
     ports:
