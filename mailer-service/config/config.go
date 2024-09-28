@@ -16,9 +16,9 @@ func NewConfig(webPort string) *Config {
 	return &Config{
 		WebPort: webPort,
 		Mailer: email.Mail{
+			Port:        port,
 			Domain:      os.Getenv("MAIL_DOMAIN"),
 			Host:        os.Getenv("MAIL_HOST"),
-			Port:        port,
 			UserName:    os.Getenv("MAIL_USERNAME"),
 			Password:    os.Getenv("MAIL_PASSWORD"),
 			Encryption:  os.Getenv("MAIL_ENCRYPTION"),
