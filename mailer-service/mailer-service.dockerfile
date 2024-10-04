@@ -10,4 +10,5 @@ RUN chmod +x /app/mailerApp
 FROM alpine:latest
 RUN mkdir /app
 COPY --from=builder /app/mailerApp /app
+COPY --from=builder /app/templates /templates
 CMD [ "/app/mailerApp" ]

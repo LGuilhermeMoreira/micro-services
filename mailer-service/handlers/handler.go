@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"mailer-service/email"
 	"net/http"
 )
@@ -25,6 +26,7 @@ func SendMail(w http.ResponseWriter, r *http.Request) {
 	err := readJSON(w, r, &requestPayload)
 
 	if err != nil {
+		log.Println(err)
 		errorJSON(w, err)
 		return
 	}
@@ -39,6 +41,7 @@ func SendMail(w http.ResponseWriter, r *http.Request) {
 	err = mail.SendSMTPMessage(msg)
 
 	if err != nil {
+		log.Println(err)
 		errorJSON(w, err)
 		return
 	}
@@ -47,9 +50,13 @@ func SendMail(w http.ResponseWriter, r *http.Request) {
 		Error:   false,
 		Message: "sent to " + requestPayload.To,
 	}
-
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusAccepted)
 	err = json.NewEncoder(w).Encode(payload)
+
 	if err != nil {
+		log.Println(err)
 		errorJSON(w, err)
+		return
 	}
 }

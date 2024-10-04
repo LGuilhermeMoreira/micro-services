@@ -3,6 +3,7 @@ package email
 import (
 	"bytes"
 	"html/template"
+	"log"
 	"time"
 
 	"github.com/vanng822/go-premailer/premailer"
@@ -48,11 +49,13 @@ func (m *Mail) SendSMTPMessage(msg Message) error {
 	formattedMessage, err := m.buildHTMLMessage(msg)
 
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 
 	plainMessage, err := m.buildPlainTextMessage(msg)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 
@@ -70,6 +73,7 @@ func (m *Mail) SendSMTPMessage(msg Message) error {
 	stmpClient, err := server.Connect()
 
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 
@@ -101,12 +105,13 @@ func (m *Mail) buildHTMLMessage(msg Message) (string, error) {
 	t, err := template.New("email-html").ParseFiles(templateToRender)
 
 	if err != nil {
+		log.Println(err)
 		return "", err
 	}
 
 	var tpl bytes.Buffer
 
-	if err = t.ExecuteTemplate(&tpl, "email-html", msg); err != nil {
+	if err = t.ExecuteTemplate(&tpl, "email-html", msg.DataMap); err != nil {
 		return "", err
 	}
 
@@ -115,6 +120,7 @@ func (m *Mail) buildHTMLMessage(msg Message) (string, error) {
 	formattedMessage, err = m.inlineCSS(formattedMessage)
 
 	if err != nil {
+		log.Println(err)
 		return "", err
 	}
 
@@ -131,12 +137,14 @@ func (m *Mail) inlineCSS(s string) (string, error) {
 	prem, err := premailer.NewPremailerFromString(s, &opt)
 
 	if err != nil {
+		log.Println(err)
 		return "", err
 	}
 
 	html, err := prem.Transform()
 
 	if err != nil {
+		log.Println(err)
 		return "", err
 	}
 
@@ -146,15 +154,16 @@ func (m *Mail) inlineCSS(s string) (string, error) {
 func (m *Mail) buildPlainTextMessage(msg Message) (string, error) {
 	templateToRender := "./templates/mail.plain.gohtml"
 
-	t, err := template.New("email-html").ParseFiles(templateToRender)
+	t, err := template.New("email-text").ParseFiles(templateToRender)
 
 	if err != nil {
+		log.Println(err)
 		return "", err
 	}
 
 	var tpl bytes.Buffer
 
-	if err = t.ExecuteTemplate(&tpl, "email-html", msg); err != nil {
+	if err = t.ExecuteTemplate(&tpl, "email-text", msg.DataMap); err != nil {
 		return "", err
 	}
 

@@ -22,7 +22,7 @@ func NewConfig(webPort string) *Config {
 			UserName:    os.Getenv("MAIL_USERNAME"),
 			Password:    os.Getenv("MAIL_PASSWORD"),
 			Encryption:  os.Getenv("MAIL_ENCRYPTION"),
-			FromName:    os.Getenv("MAIL_NAME"),
+			FromName:    os.Getenv("FROM_NAME"),
 			FromAddress: os.Getenv("FROM_ADDRESS"),
 		}}
 }

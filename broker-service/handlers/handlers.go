@@ -30,6 +30,8 @@ func HandleSubmission(w http.ResponseWriter, r *http.Request) {
 		authenticate(w, requestPayload.Auth)
 	case "log":
 		logger(w, requestPayload.Log)
+	case "mail":
+		mail(w, requestPayload.Mail)
 	default:
 		errorJSON(w, errors.New("unknown action"))
 	}
@@ -131,4 +133,38 @@ func logger(w http.ResponseWriter, entry LogPayload) {
 	resp.Data = respData["data"]
 
 	writeJSON(w, http.StatusAccepted, resp)
+}
+
+func mail(w http.ResponseWriter, payload MailPayload) {
+	jsonData, _ := json.MarshalIndent(payload, "", "\t")
+	mailServiceUrl := "http://mailer-service/send"
+	request, err := http.NewRequest("POST", mailServiceUrl, bytes.NewBuffer(jsonData))
+	if err != nil {
+		log.Println(err)
+		errorJSON(w, err, http.StatusBadGateway)
+		return
+	}
+
+	request.Header.Set("Content-Type", "application/json")
+	response, err := http.DefaultClient.Do(request)
+
+	if err != nil {
+		log.Println(err)
+		errorJSON(w, err, http.StatusBadGateway)
+		return
+	}
+
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusAccepted {
+		log.Println(response.StatusCode)
+		errorJSON(w, errors.New("status not accepted in mail service"), http.StatusNotAcceptable)
+		return
+	}
+
+	var responsePayload jsonResponse
+	responsePayload.Error = false
+	responsePayload.Message = "Mail sent!"
+	w.WriteHeader(http.StatusAccepted)
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(responsePayload)
 }

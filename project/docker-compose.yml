@@ -59,13 +59,13 @@ services:
       - app-network
     environment:
       MAIL_PORT: 1025
-      MAIL_DOMAIN:
-      MAIL_HOST: mailhog
-      MAIL_USERNAMW:
-      MAIL_PASSWORD:
-      MAIL_ENCRYPTION:
-      MAIL_NAME:
-      MAIL_ADDRESS:
+      MAIL_DOMAIN: "localhost"
+      MAIL_HOST: "mailhog"
+      MAIL_USERNAME: ""
+      MAIL_PASSWORD: ""
+      MAIL_ENCRYPTION: "none"
+      FROM_NAME: "John Smith"
+      FROM_ADDRESS: "john.smith@example.com"
 
   postgres:
     image: 'postgres:14.2'
@@ -106,6 +106,8 @@ services:
     ports:
       - "1025:1025"
       - "8025:8025"
+    networks:
+      - app-network
 
 networks:
   app-network:
