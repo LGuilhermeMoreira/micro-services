@@ -1,13 +1,13 @@
 package main
 
 import (
-	amqp "github.com/rabbitmq/amqp091-go"
+	"listener/event"
 	"log"
 )
 
 func main() {
 	// try to connect to rabbitmq
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	conn, err := connet()
 
 	if err != nil {
 		log.Panic(err)
@@ -16,8 +16,12 @@ func main() {
 	defer conn.Close()
 	log.Println("Connected to RabbitMQ")
 	// start listening for messages
-
+	log.Println("Listening for and consuming messages")
 	// create consumer
-
+	consumer, err := event.NewConsumer(conn)
+	if err != nil {
+		log.Panic(err)
+	}
 	// watch the queue and consume events
+	err = consumer.Listen([]string{"log.INFO", "log.WARNING", "log.Error"})
 }
