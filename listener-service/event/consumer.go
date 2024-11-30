@@ -3,32 +3,29 @@ package event
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
-	amqp "github.com/rabbitmq/amqp091-go"
+	"fmt"
 	"log"
 	"net/http"
+
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-type Payload struct {
-	Name string `json:"name"`
-	Data string `json:"data"`
-}
-
 type Consumer struct {
-	conn      *amqp.Connection
+	conn *amqp.Connection
 	queueName string
 }
 
-func NewConsumer(conn *amqp.Connection) (*Consumer, error) {
+func NewConsumer(conn *amqp.Connection) (Consumer, error) {
 	consumer := Consumer{
 		conn: conn,
 	}
-	err := consumer.setup()
 
+	err := consumer.setup()
 	if err != nil {
-		return nil, err
+		return Consumer{}, err
 	}
-	return &consumer, nil
+
+	return consumer, nil
 }
 
 func (consumer *Consumer) setup() error {
@@ -36,155 +33,107 @@ func (consumer *Consumer) setup() error {
 	if err != nil {
 		return err
 	}
+
 	return declareExchange(channel)
 }
 
+type Payload struct {
+	Name string `json:"name"`
+	Data string `json:"data"`
+}
+
 func (consumer *Consumer) Listen(topics []string) error {
-	channel, err := consumer.conn.Channel()
+	ch, err := consumer.conn.Channel()
 	if err != nil {
 		return err
 	}
-	defer channel.Close()
-	queue, err := declareRandomQueue(channel)
+	defer ch.Close()
+
+	q, err := declareRandomQueue(ch)
 	if err != nil {
 		return err
 	}
-	for _, topic := range topics {
-		err = channel.QueueBind(queue.Name, topic, "logs_topic", false, nil)
+
+	for _, s := range topics {
+		ch.QueueBind(
+			q.Name,
+			s,
+			"logs_topic",
+			false,
+			nil,
+		)
+
 		if err != nil {
 			return err
 		}
 	}
-	messages, err := channel.Consume(queue.Name,
-		"",
-		true,
-		false,
-		false,
-		false,
-		nil)
 
+	messages, err := ch.Consume(q.Name, "", true, false, false, false, nil)
 	if err != nil {
 		return err
 	}
 
 	forever := make(chan bool)
-
 	go func() {
-		for message := range messages {
+		for d := range messages {
 			var payload Payload
-			_ = json.Unmarshal(message.Body, &payload)
+			_ = json.Unmarshal(d.Body, &payload)
+
 			go handlePayload(payload)
 		}
 	}()
-	log.Printf(" [*] Waiting for messages")
+
+	fmt.Printf("Waiting for message [Exchange, Queue] [logs_topic, %s]\n", q.Name)
 	<-forever
+
 	return nil
 }
 
 func handlePayload(payload Payload) {
 	switch payload.Name {
 	case "log", "event":
-		//log
+		// log whatever we get
 		err := logEvent(payload)
 		if err != nil {
 			log.Println(err)
 		}
+
 	case "auth":
-		err := authEvent(payload)
-		if err != nil {
-			log.Println(err)
-		}
-	case "mail":
-		err := mailEvent(payload)
-		if err != nil {
-			log.Println(err)
-		}
+		// authenticate
+
+	// you can have as many cases as you want, as long as you write the logic
+
 	default:
 		err := logEvent(payload)
 		if err != nil {
 			log.Println(err)
 		}
 	}
-
 }
 
-func mailEvent(payload Payload) error {
-	jsonData, _ := json.MarshalIndent(payload, "", "\t")
-	mailServiceUrl := "http://mailer-service/send"
-	request, err := http.NewRequest("POST", mailServiceUrl, bytes.NewBuffer(jsonData))
+func logEvent(entry Payload) error {
+	jsonData, _ := json.MarshalIndent(entry, "", "\t")
+
+	logServiceURL := "http://logger-service/log"
+
+	request, err := http.NewRequest("POST", logServiceURL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return err
 	}
 
 	request.Header.Set("Content-Type", "application/json")
-	response, err := http.DefaultClient.Do(request)
 
-	if err != nil {
-		return err
-	}
-
-	defer response.Body.Close()
-	if response.StatusCode != http.StatusAccepted {
-		log.Println(response.StatusCode)
-		return errors.New("status not accepted in mail service")
-	}
-
-	return nil
-}
-
-func authEvent(payload Payload) error {
-	// create some json to send to auth microservice
-	jsonData, _ := json.MarshalIndent(payload, "", "\t")
-
-	// call the service
-	request, err := http.NewRequest("POST", "http://authentication-service/authenticate", bytes.NewBuffer(jsonData))
-	if err != nil {
-		return err
-	}
-
-	client := http.DefaultClient
+	client := &http.Client{}
 
 	response, err := client.Do(request)
 	if err != nil {
 		return err
 	}
-
-	defer response.Body.Close()
-
-	// make sure we get back the correct status code
-	if response.StatusCode == http.StatusUnauthorized {
-		return errors.New("authentication is unauthorized")
-	} else if response.StatusCode != http.StatusAccepted {
-		log.Println("wrong status of", response.StatusCode)
-		return errors.New("authentication failed")
-	}
-	return nil
-}
-
-func logEvent(payload Payload) error {
-	jsonData, err := json.MarshalIndent(payload, "", "\t")
-	if err != nil {
-		return err
-	}
-
-	loggerServiceUrl := "http://logger-service/log"
-
-	request, err := http.NewRequest("POST", loggerServiceUrl, bytes.NewBuffer(jsonData))
-
-	if err != nil {
-		return err
-	}
-
-	response, err := http.DefaultClient.Do(request)
-	if err != nil {
-		return err
-	}
-
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusAccepted {
 		return err
 	}
-
+	
 	return nil
 }

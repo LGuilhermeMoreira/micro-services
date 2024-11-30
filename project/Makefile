@@ -3,6 +3,7 @@ BROKER_BINARY=brokerApp
 AUTH_BINARY=authApp
 LOGGER_BINARY=loggerApp
 MAIL_BINARY=mailerApp
+LISTEN_BINARY=listenApp
 ## reload: stops docker compose (if running), builds all projects and starts docker compose
 reload:
 	@echo "Reloading Docker images..."
@@ -17,7 +18,7 @@ up:
 	@echo "Docker images started!"
 
 ## up_build: stops docker compose (if running), builds all projects and starts docker compose
-up_build: build_broker build_auth build_logger build_mail
+up_build: build_broker build_auth build_logger build_mail build_listener
 	@echo "Stopping docker images (if running...)"
 	docker compose down
 	@echo "Building (when required) and starting docker images..."
@@ -47,6 +48,11 @@ build_auth:
 	@echo "Building auth binary..."
 	cd ../authentication-service && env GOOS=linux CGO_ENABLED=0 go build -o ${AUTH_BINARY} ./cmd/api
 	@echo "Done!"
+
+## build_listener: buidls the listener binary as linux exectuable
+build_listener:
+	@echo "Building listener binary..."
+	cd ../listener-service && env env GOOS=linux CGO_ENABLED=0 go build -o ${LISTEN_BINARY} ./cmd/listen
 
 build_mail:
 	@echo "Building maill binary"
