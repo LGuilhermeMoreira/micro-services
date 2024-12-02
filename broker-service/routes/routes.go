@@ -7,9 +7,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/rabbitmq/amqp091-go"
 )
 
-func GetMux() http.Handler {
+func GetMux(conn *amqp091.Connection) http.Handler {
 	mux := chi.NewRouter()
 
 	// define the specifications about the server
@@ -34,12 +35,12 @@ func GetMux() http.Handler {
 		AllowCredentials: true,
 		MaxAge:           30,
 	}))
-
+	controller := handlers.NewController(conn)
 	// create a route to check the health of server
 	mux.Use(middleware.Heartbeat("/ping"))
 
-	mux.Post("/", handlers.Broker)
+	mux.Post("/", controller.Broker)
 
-	mux.Post("/handle", handlers.HandleSubmission)
+	mux.Post("/handle", controller.HandleSubmission)
 	return mux
 }

@@ -15,6 +15,7 @@ func main() {
 	if conn == nil {
 		log.Fatal("Could not connect to database")
 	}
+	// add migration
 	app := config.NewConfig(conn, "80")
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%v", app.Webport),

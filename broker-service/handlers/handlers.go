@@ -1,14 +1,27 @@
 package handlers
 
 import (
+	"broker/event"
 	"bytes"
 	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
+
+	"github.com/rabbitmq/amqp091-go"
 )
 
-func Broker(w http.ResponseWriter, r *http.Request) {
+type Controller struct {
+	conn *amqp091.Connection
+}
+
+func NewController(conn *amqp091.Connection) *Controller {
+	return &Controller{
+		conn: conn,
+	}
+}
+
+func (c *Controller) Broker(w http.ResponseWriter, r *http.Request) {
 	payload := jsonResponse{
 		Error:   false,
 		Message: "entrou no broker",
@@ -17,7 +30,7 @@ func Broker(w http.ResponseWriter, r *http.Request) {
 	_ = writeJSON(w, http.StatusOK, payload)
 }
 
-func HandleSubmission(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) HandleSubmission(w http.ResponseWriter, r *http.Request) {
 	var requestPayload RequestPayload
 	err := readJSON(w, r, &requestPayload)
 	if err != nil {
@@ -27,17 +40,18 @@ func HandleSubmission(w http.ResponseWriter, r *http.Request) {
 
 	switch requestPayload.Action {
 	case "auth":
-		authenticate(w, requestPayload.Auth)
+		c.authenticate(w, requestPayload.Auth)
 	case "log":
-		logger(w, requestPayload.Log)
+		// logger(w, requestPayload.Log)
+		c.loggerRabbitMQ(w, requestPayload.Log)
 	case "mail":
-		mail(w, requestPayload.Mail)
+		c.mail(w, requestPayload.Mail)
 	default:
 		errorJSON(w, errors.New("unknown action"))
 	}
 }
 
-func authenticate(w http.ResponseWriter, a AuthPayload) {
+func (c *Controller) authenticate(w http.ResponseWriter, a AuthPayload) {
 	// create some json to send to auth microservice
 	jsonData, _ := json.MarshalIndent(a, "", "\t")
 
@@ -89,7 +103,7 @@ func authenticate(w http.ResponseWriter, a AuthPayload) {
 
 }
 
-func logger(w http.ResponseWriter, entry LogPayload) {
+func (c *Controller) logger(w http.ResponseWriter, entry LogPayload) {
 	jsonData, err := json.MarshalIndent(entry, "", "\t")
 	if err != nil {
 		errorJSON(w, err, http.StatusBadRequest)
@@ -134,8 +148,7 @@ func logger(w http.ResponseWriter, entry LogPayload) {
 
 	writeJSON(w, http.StatusAccepted, resp)
 }
-
-func mail(w http.ResponseWriter, payload MailPayload) {
+func (c *Controller) mail(w http.ResponseWriter, payload MailPayload) {
 	jsonData, _ := json.MarshalIndent(payload, "", "\t")
 	mailServiceUrl := "http://mailer-service/send"
 	request, err := http.NewRequest("POST", mailServiceUrl, bytes.NewBuffer(jsonData))
@@ -166,5 +179,32 @@ func mail(w http.ResponseWriter, payload MailPayload) {
 	responsePayload.Message = "Mail sent!"
 	w.WriteHeader(http.StatusAccepted)
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(responsePayload)
+	json.NewEncoder(w).Encode(responsePayload)
+}
+
+func (c *Controller) loggerRabbitMQ(w http.ResponseWriter, payload LogPayload) {
+	err := c.pushToQueue(payload)
+	if err != nil {
+		errorJSON(w, err)
+		return
+	}
+	jResp := jsonResponse{
+		Error:   false,
+		Message: "logged via RabbitMQ",
+		Data:    nil,
+	}
+
+	writeJSON(w, http.StatusAccepted, jResp)
+}
+
+func (c *Controller) pushToQueue(payload LogPayload) error {
+	emitter, err := event.NewEmitter(c.conn)
+	if err != nil {
+		return err
+	}
+	j, err := json.MarshalIndent(&payload, "", "\t")
+	if err != nil {
+		return err
+	}
+	return emitter.Push(string(j), "log.INFO")
 }
