@@ -1,2 +1,8 @@
 .idea
 project/db-data
+authentication-service/authApp
+broker-service/brokerApp
+front-end/frontApp
+listener-service/listenApp
+logger-service/loggerApp
+mailer-service/mailerApp
