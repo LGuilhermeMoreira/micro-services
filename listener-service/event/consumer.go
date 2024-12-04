@@ -11,7 +11,7 @@ import (
 )
 
 type Consumer struct {
-	conn *amqp.Connection
+	conn      *amqp.Connection
 	queueName string
 }
 
@@ -55,7 +55,7 @@ func (consumer *Consumer) Listen(topics []string) error {
 	}
 
 	for _, s := range topics {
-		ch.QueueBind(
+		err := ch.QueueBind(
 			q.Name,
 			s,
 			"logs_topic",
@@ -134,6 +134,6 @@ func logEvent(entry Payload) error {
 	if response.StatusCode != http.StatusAccepted {
 		return err
 	}
-	
+
 	return nil
 }
