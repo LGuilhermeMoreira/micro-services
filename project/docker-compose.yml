@@ -1,5 +1,4 @@
 services:
-
   broker-service:
     build: 
       context: ./../broker-service
@@ -78,6 +77,8 @@ services:
       replicas: 1
       mode: replicated
     container_name: "listener-service"
+    networks:
+      - app-network
 
 
   postgres:
@@ -123,16 +124,24 @@ services:
       - app-network
 
   rabbitmq:
-      image: 'rabbitmq:3.9-alpine'
+      image: 'rabbitmq:3.8.16-management'
       ports:
         - "5672:5672"
+        - "15672:15672"
+        - "15692:15692"
       deploy:
         mode: replicated
         replicas: 1
+      environment:
+        RABBITMQ_DEFAULT_USER: "user"
+        RABBITMQ_DEFAULT_PASS: "password"
+        RABBITMQ_DEFAULT_VHOST: "/"
       volumes:
         - ./db-data/rabbitmq/:/var/lib/rabbitmq/
       networks:
         - app-network
+      
+
 networks:
   app-network:
     driver: bridge

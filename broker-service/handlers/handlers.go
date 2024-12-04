@@ -42,7 +42,7 @@ func (c *Controller) HandleSubmission(w http.ResponseWriter, r *http.Request) {
 	case "auth":
 		c.authenticate(w, requestPayload.Auth)
 	case "log":
-		// logger(w, requestPayload.Log)
+		// c.logger(w, requestPayload.Log)
 		c.loggerRabbitMQ(w, requestPayload.Log)
 	case "mail":
 		c.mail(w, requestPayload.Mail)

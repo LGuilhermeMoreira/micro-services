@@ -18,7 +18,7 @@ up:
 	@echo "Docker images started!"
 
 ## up_build: stops docker compose (if running), builds all projects and starts docker compose
-up_build: build_broker build_auth build_logger build_mail build_listener
+up_build:
 	@echo "Stopping docker images (if running...)"
 	docker compose down
 	@echo "Building (when required) and starting docker images..."
@@ -76,10 +76,8 @@ stop:
 	@echo "Stopped front end!"
 
 ## stop front ent and stop docker
-end:
-	@echo "Stopping front end..."
-	@-pkill -SIGTERM -f "./${FRONT_END_BINARY}"
-	@echo "Stopped front end!"
-	@echo "Stopping docker compose..."
-	docker compose down
-	@echo "Done!"
+end: stop down
+
+init: up start
+## start front end and docker with build
+init_build: up_build start

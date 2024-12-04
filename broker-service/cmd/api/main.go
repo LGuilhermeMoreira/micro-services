@@ -18,6 +18,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	log.Println("Connected to rabbitMQ")
 	server := http.Server{
 		Addr:    fmt.Sprintf(":%s", cnfg.WebPort),
 		Handler: routes.GetMux(conn),
@@ -36,7 +37,7 @@ func connect() (*amqp.Connection, error) {
 
 	// don't continue until rabbit is ready
 	for {
-		c, err := amqp.Dial("amqp://guest:guest@rabbitmq:5672/")
+		c, err := amqp.Dial("amqp://user:password@rabbitmq:5672/")
 		if err != nil {
 			fmt.Println("RabbitMQ not yet ready...")
 			counts++
