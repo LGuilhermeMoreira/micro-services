@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 
@@ -44,46 +45,34 @@ type Payload struct {
 func (consumer *Consumer) Listen(topics []string) error {
 	ch, err := consumer.conn.Channel()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to open channel: %w", err)
 	}
 	defer ch.Close()
 
 	q, err := declareRandomQueue(ch)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to declare queue: %w", err)
 	}
 
 	for _, s := range topics {
-		err := ch.QueueBind(
-			q.Name,
-			s,
-			"logs_topic",
-			false,
-			nil,
-		)
-
-		if err != nil {
-			return err
+		if err := ch.QueueBind(q.Name, s, "logs_topic", false, nil); err != nil {
+			return fmt.Errorf("failed to bind queue: %w", err)
 		}
 	}
 
 	messages, err := ch.Consume(q.Name, "", true, false, false, false, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to start consuming messages: %w", err)
 	}
 
-	forever := make(chan bool)
-	go func() {
-		for d := range messages {
-			var payload Payload
-			_ = json.Unmarshal(d.Body, &payload)
-
-			go handlePayload(payload)
+	for d := range messages {
+		var payload Payload
+		if err := json.Unmarshal(d.Body, &payload); err != nil {
+			log.Printf("Invalid message format: %s", err)
+			continue
 		}
-	}()
-
-	fmt.Printf("Waiting for message [Exchange, Queue] [logs_topic, %s]\n", q.Name)
-	<-forever
+		go handlePayload(payload)
+	}
 
 	return nil
 }
@@ -114,24 +103,23 @@ func logEvent(entry Payload) error {
 	jsonData, _ := json.MarshalIndent(entry, "", "\t")
 
 	logServiceURL := "http://logger-service/log"
-
 	request, err := http.NewRequest("POST", logServiceURL, bytes.NewBuffer(jsonData))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create HTTP request: %w", err)
 	}
 
 	request.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
-
 	response, err := client.Do(request)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to send request to log service: %w", err)
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusAccepted {
-		return err
+		body, _ := io.ReadAll(response.Body)
+		return fmt.Errorf("log service returned status %d: %s", response.StatusCode, string(body))
 	}
 
 	return nil

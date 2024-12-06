@@ -1,6 +1,7 @@
 package event
 
 import (
+	"fmt"
 	"log"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -22,9 +23,10 @@ func (e *Emitter) setup() error {
 func (e *Emitter) Push(event string, severity string) error {
 	ch, err := e.connection.Channel()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to open channel: %w", err)
 	}
 	defer ch.Close()
+
 	log.Println("Push to channel")
 	err = ch.Publish(
 		"log_topic",
@@ -36,7 +38,11 @@ func (e *Emitter) Push(event string, severity string) error {
 			Body:        []byte(event),
 		},
 	)
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to publish message: %w", err)
+	}
+
+	return nil
 }
 
 func NewEmitter(conn *amqp.Connection) (*Emitter, error) {
