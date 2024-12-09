@@ -18,7 +18,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	log.Println("Connected to rabbitMQ")
+	// log.Println("Connected to rabbitMQ")
 	server := http.Server{
 		Addr:    fmt.Sprintf(":%s", cnfg.WebPort),
 		Handler: routes.GetMux(conn),
